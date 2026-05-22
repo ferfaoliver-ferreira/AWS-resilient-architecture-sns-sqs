@@ -13,17 +13,34 @@ O primeiro passo consiste em preparar o ambiente de filas. Criamos a fila de fal
 2. Mantenha o tipo como **Padrão**.
 3. No campo **Nome**, defina como `minha-dlq-lab`.
 4. Deixe as demais configurações de ciclo de vida e criptografia como padrão e clique em **Criar fila** no final da página.
-5. Copie e reserve o **ARN** gerado para esta fila (ele será necessário no próximo passo).
+5. Copie e reserve o **ARN** gerado para esta fila.
+
+![Configuração Inicial da Fila DLQ](images/Captura%20de%20tela%202026-05-13%20213252.png)
+*Visualização do painel de criação e definição do tipo de fila padrão.*
+
+![Confirmação de Criação da DLQ](images/Captura%20de%20tela%202026-05-13%20213514.png)
+*Fila de mensagens mortas criada com sucesso no console do SQS.*
+
+---
 
 ### 2. Criação da Fila Principal e Vínculo de Redrive
 1. Novamente no painel do SQS, clique em **Criar fila** (Tipo: **Padrão**).
 2. Defina o **Nome** como `minha-fila-principal-lab`.
-3. Configure o campo **Tempo limite de visibilidade** (*Visibility Timeout*) para **30 segundos** (tempo padrão que garante que uma mensagem lida fique invisível para outros consumidores temporariamente).
+3. Configure o campo **Tempo limite de visibilidade** (*Visibility Timeout*) para **30 segundos**.
+
+![Configurando Detalhes da Fila Principal](images/Captura%20de%20tela%202026-05-13%20213537.png)
+*Definição de nomenclatura e tempos base para a fila principal do sistema.*
+
 4. Role a página até a seção **Fila de mensagens mortas (Dead-letter queue)** e marque a opção **Habilitada**.
 5. Em **Escolher fila**, selecione **Inserir ARN da fila SQS** e cole o ARN da `minha-dlq-lab` criado anteriormente.
-6. No campo **Contagem máxima de recebimentos** (*maxReceiveCount*), defina o valor como **3**. 
-   > *Isso significa que se uma mensagem for lida 3 vezes da fila principal e não for explicitamente deletada (confirmando o sucesso), o SQS entenderá que houve uma falha sistêmica crônica e a moverá para a DLQ.*
+6. No campo **Contagem máxima de recebimentos** (*maxReceiveCount*), defina o valor como **3**.
 7. Clique em **Criar fila**.
+
+![Ativação da Política de Redrive Policy](images/Captura%20de%20tela%202026-05-13%20213635.png)
+*Viculação da fila principal com a DLQ e parametrização do limite máximo de 3 tentativas.*
+
+![Filas Criadas e Prontas](images/Captura%20de%20tela%202026-05-13%20213914.png)
+*Listagem do SQS exibindo ambas as filas ativas e disponíveis para a arquitetura.*
 
 ---
 
@@ -37,12 +54,25 @@ Com as filas prontas, criamos o componente responsável por receber as mensagens
 3. Selecione o tipo **Padrão** (adequado para cenários de alta vazão e distribuição em massa/fan-out).
 4. No campo **Nome**, insira `meu-topico-sns-lab` e clique em **Criar tópico**.
 
+![Criação do Tópico SNS](images/Captura%20de%20tela%202026-05-13%20214128.png)
+*Parametrização do tópico Standard no console do Amazon SNS.*
+
+![Tópico Criado com Sucesso](images/Captura%20de%20tela%202026-05-13%20214222.png)
+*Painel de gerenciamento exibindo os detalhes gerais e ARN do novo tópico.*
+
+---
+
 ### 2. Criação da Assinatura (Subscription)
 1. Dentro da página do tópico criado, vá até a aba **Assinaturas** e clique em **Criar assinatura**.
 2. No campo **Protocolo**, escolha **Amazon SQS**.
 3. No campo **Endpoint**, insira o ARN exato da fila principal (`minha-fila-principal-lab`).
-4. Clique em **Criar assinatura**. 
-   > *A partir deste momento, qualquer mensagem publicada no Tópico SNS será automaticamente replicada e entregue como uma nova mensagem dentro da fila SQS principal.*
+4. Clique em **Criar assinatura**.
+
+![Configurando a Assinatura SQS](images/Captura%20de%20tela%202026-05-13%20214231.png)
+*Mapeamento do protocolo e vinculação do endpoint correspondente à fila consumidora principal.*
+
+![Assinatura Ativada no Tópico](images/Captura%20de%20tela%202026-05-13%20214550.png)
+*Visualização da assinatura vinculando com sucesso o barramento ao buffer do SQS.*
 
 ---
 
@@ -52,12 +82,14 @@ Para impedir que agentes maliciosos ou serviços não autorizados injetem dados 
 
 1. Volte ao console do **Amazon SQS** e clique na sua fila principal (`minha-fila-principal-lab`).
 2. Acesse a aba **Política de acesso** e clique em **Editar**.
-3. No editor JSON, remova a permissão genérica padrão e configure uma regra estrita:
-   - Defina o efeito como `Allow`.
-   - O `Principal` deve ser estritamente limitado ao serviço do SNS (`sns.amazonaws.com`).
-   - A `Action` permitida deve ser apenas `sqs:SendMessage`.
-   - Adicione uma cláusula de condição (`Condition`) garantindo que o `aws:SourceArn` seja estritamente igual ao ARN do seu `meu-topico-sns-lab`.
+3. No editor JSON, remova a permissão genérica padrão e configure uma regra estrita limitando a ação `sqs:SendMessage` ao serviço `sns.amazonaws.com` com a condição de origem do seu ARN do SNS.
 4. Clique em **Salvar**.
+
+![Acessando Configurações de Segurança da Fila](images/Captura%20de%20tela%202026-05-13%20215437.png)
+*Aba de políticas de acesso nativa da fila principal antes das alterações de privilégio mínimo.*
+
+![Estruturação da Política JSON Customizada](images/Captura%20de%20tela%202026-05-13%20215547.png)
+*Edição manual da IAM Resource Policy restringindo os métodos de publicação ao SNS de origem.*
 
 ---
 
@@ -68,18 +100,35 @@ A última fase valida se os tempos e limites de mensageria estão se comportando
 ### 1. Publicação do Evento via SNS
 1. No console do **Amazon SNS**, entre no tópico `meu-topico-sns-lab`.
 2. Clique no botão **Publicar mensagem**.
-3. No corpo da mensagem, insira um texto estruturado de teste (ex: `{"id_pedido": 1024, "status": "criado"}`).
-4. Clique em **Publicar mensagem**.
+3. No corpo da mensagem, insira um texto estruturado de teste e envie.
+
+![Publicando Evento de Teste no SNS](images/Captura%20de%20tela%202026-05-13%20220154.png)
+*Disparo de payload estruturado através do console do barramento para simular um microsserviço produtor.*
+
+---
 
 ### 2. Simulação de Falhas Consecutivas e Transbordo para DLQ
 1. Retorne ao painel do **Amazon SQS** e selecione a fila `minha-fila-principal-lab`. Note que o contador de **Mensagens disponíveis** agora marca **1**.
-2. Clique em **Enviar e receber mensagens** e clique no botão **Sondar mensagens** (*Sondar/Poll for messages*).
-3. A mensagem enviada pelo SNS aparecerá na lista. Clique nela para inspecionar os detalhes:
-   - Veja que o contador **Contagem de recebimentos** (*Receive count*) marcará **1**.
-4. **O teste de resiliência:** Feche os detalhes da mensagem **sem clicar em Excluir**.
-5. Aguarde o relógio correr por **30 segundos** (tempo que definimos para o *Visibility Timeout*). Durante esse intervalo, a mensagem fica oculta para simular que um worker está tentando processá-la.
-6. Passados os 30 segundos, clique novamente em **Sondar mensagens**. Abra o card. O contador mudará para **Receive count = 2**. Repita o processo mais uma vez para que ele atinja **Receive count = 3**.
-7. Após o terceiro ciclo expirar, clique em sondar novamente. 
-8. **Resultado esperado:** A mensagem sumirá completamente da fila principal, indicando que ela atingiu o limite de tolerância estabelecido na *Redrive Policy*.
-9. Vá até o menu do SQS, abra a fila `minha-dlq-lab` e clique em **Enviar e receber mensagens** ➔ **Sondar mensagens**.
-10. A mensagem original estará estacionada com sucesso na DLQ, isolada e pronta para auditoria dos desenvolvedores, sem ter causado gargalos ou travamentos no barramento principal!
+2. Clique em **Enviar e receber mensagens** e clique no botão **Sondar mensagens** (*Poll for messages*).
+
+![Sondagem Inicial de Mensagens Disponíveis](images/Captura%20de%20tela%202026-05-13%20220849.png)
+*Identificação da mensagem retida no buffer da fila principal aguardando processamento.*
+
+3. A mensagem enviada pelo SNS aparecerá na lista. Clique nela para inspecionar os detalhes e verificar que o contador **Contagem de recebimentos** (*Receive count*) marcará **1**.
+
+![Primeira Tentativa de Recebimento](images/Captura%20de%20tela%202026-05-13%20220931.png)
+*Inspeção dos metadados da mensagem apontando o início do ciclo de leitura (Receive count = 1).*
+
+4. Feche os detalhes da mensagem **sem clicar em Excluir**. Aguarde o relógio correr por **30 segundos** (tempo do *Visibility Timeout*).
+5. Passados os 30 segundos, clique novamente em **Sondar mensagens** para que ele atinja o segundo ciclo de leitura.
+
+![Segunda Tentativa de Recebimento](images/Captura%20de%20tela%202026-05-13%20220947.png)
+*Validação do comportamento assíncrono com o incremento do contador de tentativas após expiração da visibilidade (Receive count = 2).*
+
+6. Repita o processo de leitura mais uma vez até estourar o limite parametrizado de tentativas na fila principal.
+
+![Atingindo o Limite Máximo de Erros](images/Captura%20de%20tela%202026-05-13%20222515.png)
+*Monitoramento do evento na fila principal indicando o estouro do limite máximo de tentativas toleradas.*
+
+7. Após o ciclo expirar, clique em sondar novamente. A mensagem sumirá da fila principal e será deslocada.
+8. Vá até o menu do SQS, abra a fila `minha-dlq-lab` e realize a sondagem. A mensagem original estará estacionada de forma segura na DLQ pronta para auditoria!
