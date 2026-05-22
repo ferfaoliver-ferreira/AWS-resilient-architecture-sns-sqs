@@ -1,6 +1,7 @@
 # Passo a Passo Técnico: Implementação Prática
 
 Abaixo está o detalhamento prático de todas as etapas executadas no Console da AWS para a construção e validação desta arquitetura resiliente.
+<img width="621" height="472" alt="Captura de tela 2026-05-13 222515" src="https://github.com/user-attachments/assets/3f72582f-3f61-4a04-a5e6-c6c11d2a0a02" />
 
 ---
 
