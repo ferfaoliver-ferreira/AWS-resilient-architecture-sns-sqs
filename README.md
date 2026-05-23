@@ -100,11 +100,6 @@ Para impedir que agentes maliciosos ou serviços não autorizados injetem dados 
 3. No editor JSON, remova a permissão genérica padrão e configure uma regra estrita limitando a ação `sqs:SendMessage` ao serviço `sns.amazonaws.com` com a condição de origem do seu ARN do SNS.
 4. Clique em **Salvar**.
 
-![Acessando Configurações de Segurança da Fila](images/Captura%20de%20tela%202026-05-13%20215437.png)
-*Aba de políticas de acesso nativa da fila principal antes das alterações de privilégio mínimo.*
-
-![Estruturação da Política JSON Customizada](images/Captura%20de%20tela%202026-05-13%20215547.png)
-*Edição manual da IAM Resource Policy restringindo os métodos de publicação ao SNS de origem.*
 
 ---
 
@@ -117,33 +112,14 @@ A última fase valida se os tempos e limites de mensageria estão se comportando
 2. Clique no botão **Publicar mensagem**.
 3. No corpo da mensagem, insira um texto estruturado de teste e envie.
 
-![Publicando Evento de Teste no SNS](images/Captura%20de%20tela%202026-05-13%20220154.png)
-*Disparo de payload estruturado através do console do barramento para simular um microsserviço produtor.*
-
 ---
 
 ### 2. Simulação de Falhas Consecutivas e Transbordo para DLQ
 1. Retorne ao painel do **Amazon SQS** e selecione a fila `minha-fila-principal-lab`. Note que o contador de **Mensagens disponíveis** agora marca **1**.
 2. Clique em **Enviar e receber mensagens** e clique no botão **Sondar mensagens** (*Poll for messages*).
-
-![Sondagem Inicial de Mensagens Disponíveis](images/Captura%20de%20tela%202026-05-13%20220849.png)
-*Identificação da mensagem retida no buffer da fila principal aguardando processamento.*
-
 3. A mensagem enviada pelo SNS aparecerá na lista. Clique nela para inspecionar os detalhes e verificar que o contador **Contagem de recebimentos** (*Receive count*) marcará **1**.
-
-![Primeira Tentativa de Recebimento](images/Captura%20de%20tela%202026-05-13%20220931.png)
-*Inspeção dos metadados da mensagem apontando o início do ciclo de leitura (Receive count = 1).*
-
 4. Feche os detalhes da mensagem **sem clicar em Excluir**. Aguarde o relógio correr por **30 segundos** (tempo do *Visibility Timeout*).
 5. Passados os 30 segundos, clique novamente em **Sondar mensagens** para que ele atinja o segundo ciclo de leitura.
-
-![Segunda Tentativa de Recebimento](images/Captura%20de%20tela%202026-05-13%20220947.png)
-*Validação do comportamento assíncrono com o incremento do contador de tentativas após expiração da visibilidade (Receive count = 2).*
-
 6. Repita o processo de leitura mais uma vez até estourar o limite parametrizado de tentativas na fila principal.
-
-![Atingindo o Limite Máximo de Erros](images/Captura%20de%20tela%202026-05-13%20222515.png)
-*Monitoramento do evento na fila principal indicando o estouro do limite máximo de tentativas toleradas.*
-
 7. Após o ciclo expirar, clique em sondar novamente. A mensagem sumirá da fila principal e será deslocada.
 8. Vá até o menu do SQS, abra a fila `minha-dlq-lab` e realize a sondagem. A mensagem original estará estacionada de forma segura na DLQ pronta para auditoria!
