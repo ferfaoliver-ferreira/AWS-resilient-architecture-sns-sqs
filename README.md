@@ -16,10 +16,15 @@ O primeiro passo consiste em preparar o ambiente de filas. Criamos a fila de fal
 4. Deixe as demais configurações de ciclo de vida e criptografia como padrão e clique em **Criar fila** no final da página.
 5. Copie e reserve o **ARN** gerado para esta fila.
 
-![Configuração Inicial da Fila DLQ](images/Captura%20de%20tela%202026-05-13%20213252.png)
+<img width="843" height="393" alt="image" src="https://github.com/user-attachments/assets/4172ee25-1a5f-4f4e-b48a-6dac5d12895e" />
+
+
+<img width="830" height="385" alt="image" src="https://github.com/user-attachments/assets/cfc9883f-c2eb-4b2d-9863-b5c9fb5c837e" />
+
 *Visualização do painel de criação e definição do tipo de fila padrão.*
 
-![Confirmação de Criação da DLQ](images/Captura%20de%20tela%202026-05-13%20213514.png)
+<img width="840" height="389" alt="image" src="https://github.com/user-attachments/assets/065bb15a-3449-4c75-8d46-6bb325a833e6" />
+
 *Fila de mensagens mortas criada com sucesso no console do SQS.*
 
 ---
@@ -29,7 +34,8 @@ O primeiro passo consiste em preparar o ambiente de filas. Criamos a fila de fal
 2. Defina o **Nome** como `minha-fila-principal-lab`.
 3. Configure o campo **Tempo limite de visibilidade** (*Visibility Timeout*) para **30 segundos**.
 
-![Configurando Detalhes da Fila Principal](images/Captura%20de%20tela%202026-05-13%20213537.png)
+<img width="843" height="387" alt="image" src="https://github.com/user-attachments/assets/d0257476-62cc-437a-b219-0270cb98012a" />
+
 *Definição de nomenclatura e tempos base para a fila principal do sistema.*
 
 4. Role a página até a seção **Fila de mensagens mortas (Dead-letter queue)** e marque a opção **Habilitada**.
@@ -37,10 +43,13 @@ O primeiro passo consiste em preparar o ambiente de filas. Criamos a fila de fal
 6. No campo **Contagem máxima de recebimentos** (*maxReceiveCount*), defina o valor como **3**.
 7. Clique em **Criar fila**.
 
-![Ativação da Política de Redrive Policy](images/Captura%20de%20tela%202026-05-13%20213635.png)
+<img width="844" height="391" alt="image" src="https://github.com/user-attachments/assets/b29bc2bd-c7e8-4979-9e0e-c48ea05ee1b6" />
+
 *Viculação da fila principal com a DLQ e parametrização do limite máximo de 3 tentativas.*
 
-![Filas Criadas e Prontas](images/Captura%20de%20tela%202026-05-13%20213914.png)
+<img width="829" height="390" alt="image" src="https://github.com/user-attachments/assets/1608dd4f-9659-4a0d-a04e-231909a8894b" />
+
+
 *Listagem do SQS exibindo ambas as filas ativas e disponíveis para a arquitetura.*
 
 ---
@@ -55,10 +64,12 @@ Com as filas prontas, criamos o componente responsável por receber as mensagens
 3. Selecione o tipo **Padrão** (adequado para cenários de alta vazão e distribuição em massa/fan-out).
 4. No campo **Nome**, insira `meu-topico-sns-lab` e clique em **Criar tópico**.
 
-![Criação do Tópico SNS](images/Captura%20de%20tela%202026-05-13%20214128.png)
+<img width="829" height="390" alt="image" src="https://github.com/user-attachments/assets/2715ac9c-5138-41f8-b049-77dac16762e5" />
+
 *Parametrização do tópico Standard no console do Amazon SNS.*
 
-![Tópico Criado com Sucesso](images/Captura%20de%20tela%202026-05-13%20214222.png)
+<img width="838" height="391" alt="image" src="https://github.com/user-attachments/assets/234d9c5e-3c38-4335-96ca-2c0652ad83fa" />
+
 *Painel de gerenciamento exibindo os detalhes gerais e ARN do novo tópico.*
 
 ---
@@ -69,10 +80,13 @@ Com as filas prontas, criamos o componente responsável por receber as mensagens
 3. No campo **Endpoint**, insira o ARN exato da fila principal (`minha-fila-principal-lab`).
 4. Clique em **Criar assinatura**.
 
-![Configurando a Assinatura SQS](images/Captura%20de%20tela%202026-05-13%20214231.png)
+<img width="856" height="390" alt="image" src="https://github.com/user-attachments/assets/33458595-7700-4c13-9751-e5997646f351" />
+
+
 *Mapeamento do protocolo e vinculação do endpoint correspondente à fila consumidora principal.*
 
-![Assinatura Ativada no Tópico](images/Captura%20de%20tela%202026-05-13%20214550.png)
+<img width="844" height="384" alt="image" src="https://github.com/user-attachments/assets/d6dfac68-077a-4df7-b0be-f03d708899a5" />
+
 *Visualização da assinatura vinculando com sucesso o barramento ao buffer do SQS.*
 
 ---
